@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+
+  postgres:
+    container_name: postgres
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=Money_App
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=25032001
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    expose:
+      - 5432
+    networks:
+      - backend
+
+  storage-service:
+    container_name: storage-service
+    image: denpool/storage-service:0.0.1
+    restart: always
+    networks:
+      - backend
+    ports:
+      - "6500:6500"
+    depends_on:
+      discovery-service:
+        condition: service_started
+
+  discovery-service:
+    container_name: discovery-service
+    image: denpool/discovery-service
+    restart: always
+    ports:
+      - "8761:8761"
+    networks:
+      - backend
+    depends_on:
+      zipkin:
+        condition: service_healthy
+
+  zipkin:
+    container_name: zipkin
+    image: openzipkin/zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - backend
+
+  adminer:
+    container_name: adminer
+    image: adminer
+    restart: always
+    ports:
+      - "5656:8080"
+    networks:
+      - backend
+
+
+networks:
+  backend:
+volumes:
+  db-data:
